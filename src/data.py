@@ -58,6 +58,7 @@ class ERDataset(Dataset):
         e_types_ix = list()
         e_masks = list()
         r_masks = list()
+        rel = list()
         e_size = list()
         for entity in self.doc[doc_id].entities:
             e_types.append(entity.e_type.string)
@@ -69,7 +70,7 @@ class ERDataset(Dataset):
         for relation in self.doc[doc_id].relations:
             es1 = relation.first_entity.span
             es2 = relation.second_entity.span
-            
+            r_spans.append((es1, es2))
             
             
             
