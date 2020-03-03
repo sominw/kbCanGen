@@ -124,8 +124,8 @@ class ERDataset(Dataset):
         relation_masks = torch.stack(r_masks + non_r_masks)
         entity_size = torch.tensor(e_size + non_e_size, dtype=torch.long)
         relations = torch.tensor(rel + n_rel, dtype=torch.long)
-        entity_sample_masks = torch.ones(list(entity_masks.shape[0]), dtype=torch.bool)
-        relation_sample_masks = torch.ones(list(relations.shape[0]), dtype=torch.bool)
+        entity_sample_mask = torch.ones(list(entity_masks.shape[0]), dtype=torch.bool)
+        relation_sample_mask = torch.ones(list(relations.shape[0]), dtype=torch.bool)
         
         training_sample = {
             "context_masks":masks,
@@ -134,20 +134,47 @@ class ERDataset(Dataset):
             "entity_types":entity_types,
             "relation_types":relation_types,
             "relations":relations,
-            "entity_sample_masks":entity_sample_masks,
-            "relation_sample_masks":relation_sample_masks,
+            "entity_sample_masks":entity_sample_mask,
+            "relation_sample_masks":relation_sample_mask,
             "entity_sizes":entity_size,
             "encodings":encodings,
         }
         
         return training_sample
         
+
+    def get_test_sample(self, doc_id):
         
+        encodings = torch.zeros(len(self.doc[doc_id].encoding), dtype=torch.long)
+        encodings[:len(self.doc[doc_id].encoding)] = torch.tensor(self.doc[doc_id].encoding, dtype=torch.long)
+        masks = torch.zeros(len(self.doc[doc_id].encoding), dtype=torch.bool)
+        masks[:len(self.doc[doc_id].encoding)] = 1
         
-            
-            
-            
-            
+        e_size = list()
+        e_spans = list()
+        e_masks = list()
+        
+        for block in range(1, self.max_size + 1):
+            for i in range((len(self.doc[doc_id].tokens) - block) + 1):
+                curr = self.doc[doc_id].tokens[i:i + block].astuple()
+                e_spans.append(curr)
+                e_size.append(block)
+                e_masks.append(create_entites_mask(*curr, len(self.doc[doc_id].encoding)))
+        
+        entity_spans = torch.tensor(e_spans, dtype=torch.long)
+        entity_masks = torch.stack(e_masks)
+        entity_sizes = torch.tensor(e_size, dtype=torch.long)
+        entity_sample_mask = torch.tensor([1] * entity_masks.shape[0], dtype=torch.bool)
+        
+        test_sample = {
+            "context_masks":masks,
+            "entity_spans":entity_spans,
+            "entity_masks":entity_masks,
+            "entity_sizes":entity_sizes,
+            "entity_sample_masks":entity_sample_mask,
+            "encodings":encodings,
+        }
+        return test_sample
         
     def itr_rel(self, batch_size, order):
         rel_itr = Iterator(batch_size, self.relations, order)

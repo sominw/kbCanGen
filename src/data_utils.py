@@ -3,9 +3,6 @@
 index: identifier in the document
 """
 
-from collections import OrderedDict
-from typing import List, Dict
-
 class Iterator:
     def __init__(self, batch_size, content, order = None):
         self.batch_size = batch_size
@@ -134,7 +131,7 @@ class Article:
     
     @property
     def tokens(self):
-        return Span(self.tokens)
+        return Span(self._tokens)
     
     def __hash__(self):
         return hash(self.pmid)
