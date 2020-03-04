@@ -29,7 +29,7 @@ class ERDataset(Dataset):
     def change_mode(self, mode):
         if ((mode == 1 and self.mode == 1) or (mode == 2 and self.mode == 2)):
             return
-        self.mode = 2
+        self.mode = mode
         
     def get_new_token(self, start, end, idn, string):
         new_token = Token(start, end, idn, self.token_id, string)
