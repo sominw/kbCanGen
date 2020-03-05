@@ -1,4 +1,4 @@
-afrom collections import OrderedDict
+from collections import OrderedDict
 from typing import List, Dict, OrderedDict
 import json
 
@@ -53,7 +53,22 @@ class ReadInput:
     
     
     def process_entities(self, input_entities, tokens, dataset: ERDataset):
-        pass
+        entities = list()
+        for _, entity in enumerate(input_entities):
+            e_type = self.entity_types[input_entities[entity['type']]]
+            start, end = tuple(entity['start'], entity['end'])
+            string = " ".join([token.string for token in tokens[start:end]])
+            entities.append(dataset.get_new_entity(e_type, tokens[start:end], string))
         
+        return entities
         
+    def process_relations(self, input_relations, entities, dataset : ERDataset):
+        relations = list()
+        for relation in input_relations:
+            r_type = self.relation_types[relation['type']]
+            first_e = entities[relation['head']]
+            second_e = entities[relation['tail']]
+            relations.append(dataset.get_new_relation(r_type, first_e, second_e))
+            
+        return relations    
         
