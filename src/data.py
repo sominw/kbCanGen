@@ -8,12 +8,11 @@ from data_utils import Iterator, Token, Span, EntityType, Entity, RelationType, 
 from utils import create_asc_masks, create_entites_mask, create_relations_mask
 
 class ERDataset(Dataset):
-    def __init__(self, label, i, relation_types, entity_types, num_relations, num_entites):
+    def __init__(self, label, relation_types, entity_types, num_relations, num_entites):
         self.mode_map = {1:'TRAIN', 2:'TEST'}
         self.mode = 1
         self.token_id = 0
         self.label = label
-        self.input = i
         self.e_id = 0
         self.entities = OrderedDict()
         self.rel_id = 0
@@ -46,7 +45,7 @@ class ERDataset(Dataset):
         self.rel_id += 1
         return self.relations[self.rel_id - 1]
         
-    def get_new_doc(self, assigned_id, encoding, entities, relations, tokens):
+    def get_new_doc(self, encoding, entities, relations, tokens):
         self.doc[self.pmid] = Article(self.pmid, encoding, entities, relations, tokens)
         self.pmid += 1
         return self.doc[self.pmid - 1]
