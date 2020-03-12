@@ -36,6 +36,15 @@ class ReadInput:
             
         self.len_entity_types = len(self.entity_types)
         self.len_relation_types = len(self.relation_types)
+        
+    def fetch_data(self, label):
+        return self.datasets[label]
+    
+    def fetch_e_type(self, index):
+        return self.entity_dict[index]
+    
+    def fetch_r_type(self, index):
+        return self.relation_dict[index]
             
     def process_tokens(self, input_tokens, dataset : ERDataset):
         encoding = list(self.tokenizer.convert_tokens_to_ids('[CLS]'))
@@ -81,6 +90,7 @@ class ReadInput:
         doc = dataset.get_new_doc(encoding, entities, relations, tokens)
         return doc
     
+    # Input to read data is a dict with train & dev paths.
     def read_data(self, path):
         for label, p in path.items():
             dataset = ERDataset(label, self.relation_types, self.entity_types, self.num_relations, self.num_entites)

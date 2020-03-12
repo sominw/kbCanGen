@@ -19,6 +19,8 @@ class AscModel(BertPreTrainedModel):
         self.model = BertModel(config)
         self.input = sentences
         
+    # Incomplete
+        
 
 class ERModel(BertPreTrainedModel):
     
@@ -75,13 +77,10 @@ class ERLoss():
         self.ec = ent_cr
         
     def compute(self, entity_so, relation_so, entities, relations, entity_mask, relation_mask):
-        #Types
         entities = entities.view(-1)
         relations = relations.view(-1)
-        #Logits
         entity_so = entity_so.view(-1, entity_so.shape[-1]).float()
         relation_so = relation_so.view(-1, relation_so.shape[-1]).float()
-        #Masks
         entity_mask = entity_mask.view(-1).float()
         relation_mask = relation_mask.view(-1).float()
         
