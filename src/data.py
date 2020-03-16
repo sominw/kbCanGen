@@ -8,7 +8,7 @@ from data_utils import Iterator, Token, Span, EntityType, Entity, RelationType, 
 from utils import create_asc_masks, create_entites_mask, create_relations_mask
 class ERDataset(Dataset):
     def __init__(self, label, relation_types, entity_types, num_relations, num_entites):
-        self.mode_map = {1:'TRAIN', 2:'TEST'}
+        self.mode_map = {1:'TRAIN', 2:'VAL'}
         self.mode = 1
         self.token_id = 0
         self.label = label

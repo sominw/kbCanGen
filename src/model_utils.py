@@ -24,7 +24,7 @@ class AscModel(BertPreTrainedModel):
 
 class ERModel(BertPreTrainedModel):
     
-    def __init__(self, embedding_size, relations, entities, cls_token, config):
+    def __init__(self, embedding_size, relations, entities, cls_token, config, freeze_transformer):
         super(ERModel, self).__init__(config)
         self.relations = relations
         self.entities = entities
@@ -34,6 +34,9 @@ class ERModel(BertPreTrainedModel):
         self.init_weights()
         self.entity_clf = nn.Linear(config.hidden_size + embedding_size, entities)
         self.relations_clf = nn.Linear(config.hidden_size + embedding_size, relations)
+        if freeze_transformer:
+            for p in self.model.parameters():
+                p.requires_grad = False
         
     def entity_classifier(self, idxs, entity_mask, embedding_size, h):
         entity_span = entity_mask.unsqueeze(-1) * h.unsqueeze(1).repeat(1, entity_mask.shape[1], 1, 1)
