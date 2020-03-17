@@ -5,9 +5,7 @@ import argparse
 
 import torch
 from torch.optim import Optimizer
-from torch.nn import DataParallel
 from torch.utils.data import RandomSampler, DataLoader, SequentialSampler
-from tqdm import tqdm, trange
 
 import transformers
 from transformers import AdamW, BertTokenizer
