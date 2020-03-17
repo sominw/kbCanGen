@@ -39,14 +39,31 @@ class Trainer:
                                         freeze_transformer=args.freeze_model_layers,
                                         entities = len(reader.entity_types),
                                         relations = len(reader.relation_types) - 1)
-        mode.to(self.device)
+        model.to(self.device)
         optim = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
         scheduler = transformers.get_linear_schedule_with_warmup(optim, args.lr_warmup * updates, updates)
         e_cr = torch.nn.BCEWithLogitsLoss(reduction="None")
         r_cr = torch.nn.BCEWithLogitsLoss(reduction="None")
-        loss = ERLoss(model, optim, scheduler, e_cr, rel_cr, args.max_grad_norm)
+        loss = ERLoss(model, optim, scheduler, e_cr, r_cr, args.max_grad_norm)
         
         ######## Write Train Epoch & Eval ############
         
+        for epoch in range(args.epochs):
+            self._train(model, loss, optim, training_data, )
         
-        
+    def _train(self, model, loss, optim, data):
+        args = self.args
+        dl = DataLoader(data, batch_size=args.batch_size, shuffle=True, drop_last=True)
+        model.zero_grad()
+        iter = 0
+        for _, sample in enumerate(dl):
+            sample = sample.to(self.device)
+            l_e, l_r = model(idxs = sample['encodings'],
+                             relations = sample['relations'],
+                             entity_size = sample['entity_sizes'],
+                             entity_mask = sample['entity_masks'],
+                             relation_mask = sample['relation_masks'],
+                             attn_mask = sample['context_masks'])
+            net_loss = loss.compute(l_e, l_r, sample['entity_types'], sample['relation_types'], sample['entity_masks'], sample['relation_masks'])
+            iter += 1
+        return iter

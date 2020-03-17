@@ -68,6 +68,10 @@ class ERModel(BertPreTrainedModel):
         
         return entity_res, relc
     
+    def forward(self, eval=False, *args, **kwargs):
+        if eval == False:
+            self.forward_train(self, *args, **kwargs)
+    
     
 class ERLoss():
     def __init__(self, network, optimizer, schedule,
