@@ -9,6 +9,9 @@ import transformers
 from transformers import BertModel, BertTokenizer, BertConfig, BertConfig, BertPreTrainedModel
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from tqdm import tqdm, trange
+
+from data import ERDataset
+from data_utils import Iterator, Token, Entity, EntityType, Relation, RelationType, Article, Span
 from utils import get_conembedding, get_batch_index
 
 class AscModel(BertPreTrainedModel):
@@ -19,7 +22,7 @@ class AscModel(BertPreTrainedModel):
         self.model = BertModel(config)
         self.input = sentences
         
-    # Incomplete
+    # TBD
         
 
 class ERModel(BertPreTrainedModel):
@@ -71,9 +74,13 @@ class ERModel(BertPreTrainedModel):
     def forward(self, eval=False, *args, **kwargs):
         if eval == False:
             self.forward_train(self, *args, **kwargs)
+            
+class ModelEval:
+    def __init__(self, dataset, reader, tokenizer: BertTokenizer, path, count, epoch, label):
+        pass
     
     
-class ERLoss():
+class ERLoss:
     def __init__(self, network, optimizer, schedule,
                  ent_cr, rel_cr, max_gradnorm):
         self.optim = optimizer
