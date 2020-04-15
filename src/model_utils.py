@@ -12,7 +12,7 @@ from tqdm import tqdm, trange
 
 from data import ERDataset
 from data_utils import Iterator, Token, Entity, EntityType, Relation, RelationType, Article, Span
-from utils import get_conembedding, get_batch_index
+from utils import get_conembedding, get_batch_index, assign_trueLabels
 
 class AscModel(BertPreTrainedModel):
     
@@ -77,8 +77,36 @@ class ERModel(BertPreTrainedModel):
             
 class ModelEval:
     def __init__(self, dataset, reader, tokenizer: BertTokenizer, path, count, epoch, label):
-        pass
+        self.dataset = dataset
+        self.reader = reader
+        self.tokenizer = tokenizer
+        self.count = count
+        self.path = path
+        self.label = label
+        self.ents = list()
+        self.rel = list()
+        self.true_ents, self.true_relations = assign_trueLabels(self.dataset.doc)
     
+    def evaluate(self, batch_size, batch, ents, rels, relations):
+        rels = rels.view(batch_size, -1)
+        rel_types = rels.shape[2]
+        ent_types = ents.argmax(dim=-1) * batch['entity_sample_masks'].long()
+        
+        for i in range(batch_size):
+            ent = ents[i]
+            rel = rels[i]
+            n_none_rels rel.nonzero().view(-1)
+            r_score = rel[n_none_rels]
+            r_types = (n_none_rels % rel_types) + 1
+            r_ixs = n_none_rels // rel_types
+            
+            prs = rels[i][r_ixs]
+            er_spans = batch['entity_spans'][i][prs].long()
+            e_types = torch.zeros([prs.shape[0],2])
+            
+            if (prs.shape[0] != 0):
+                e_types = torch.stack([ent_types[prs[p]] for p in range(prs.shape[0])])
+            
     
 class ERLoss:
     def __init__(self, network, optimizer, schedule,

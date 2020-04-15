@@ -1,3 +1,5 @@
+from data_utils import Article
+
 import torch
 
 def get_conembedding(token, h, x):
@@ -35,3 +37,12 @@ def create_relations_mask(r0, r1, size):
     mask = torch.zeros(size, dtype=bool)
     mask[begin:end] = 1
     return mask
+
+def assign_trueLabels(arr):
+    ents = list()
+    rel = list()
+    for article in arr:
+        ents.append([ent.as_tuple() for ent in article.entities])
+        rel.append([rel.as_tuple() for rel in article.relations])
+    
+    return ents, rel
