@@ -20,7 +20,7 @@ class Trainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
         self.tokenizer = BertTokenizer.from_pretrained(args.tokenizer_path, do_lower_case = args.convert_to_lowercase)
         
-    def train(self, train_path, val_path, path, reader : ReadInput):
+    def train(self, train_path, val_path, path, reader):
         temp = {
             'train':train_path,
             'val':val_path,
@@ -43,8 +43,6 @@ class Trainer:
         e_cr = torch.nn.BCEWithLogitsLoss(reduction="None")
         r_cr = torch.nn.BCEWithLogitsLoss(reduction="None")
         loss = ERLoss(model, optim, scheduler, e_cr, r_cr, args.max_grad_norm)
-        
-        ######## Write Train Epoch & Eval ############
         
         for epoch in range(args.epochs):
             self._train(model, loss, optim, training_data, )

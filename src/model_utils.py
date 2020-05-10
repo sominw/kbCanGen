@@ -12,7 +12,7 @@ from tqdm import tqdm, trange
 
 from data import ERDataset
 from data_utils import Iterator, Token, Entity, EntityType, Relation, RelationType, Article, Span
-from utils import get_conembedding, get_batch_index, assign_trueLabels
+from utils import get_conembedding, get_batch_index
 
 class AscModel(BertPreTrainedModel):
     
@@ -76,68 +76,18 @@ class ERModel(BertPreTrainedModel):
             self.forward_train(self, *args, **kwargs)
             
 class ModelEval:
-    def __init__(self, dataset, reader, tokenizer: BertTokenizer, path, count, epoch, label):
+    def __init__(self, dataset, reader, tokenizer: BertTokenizer, path, count, epoch, label, th):
+        self.relations = list()
+        
         self.dataset = dataset
         self.reader = reader
-        self.tokenizer = tokenizer
-        self.count = count
+        self.epoch = epoch
+        self.threshold = th
         self.path = path
+        self.count = count
         self.label = label
-        self.ents = list()
-        self.rel = list()
-        self.true_ents, self.true_relations = assign_trueLabels(self.dataset.doc)
-    
-    def evaluate(self, batch_size, batch, ents, rels, relations):
-        rels = rels.view(batch_size, -1)
-        rel_types = rels.shape[2]
-        ent_types = ents.argmax(dim=-1) * batch['entity_sample_masks'].long()
         
-        for i in range(batch_size):
-            ent = ents[i]
-            rel = rels[i]
-            n_none_rels = rel.nonzero().view(-1)
-            r_score = rel[n_none_rels]
-            r_types = (n_none_rels % rel_types) + 1
-            r_ixs = n_none_rels // rel_types
-            
-            n_none_ents = ent.nonzero().view(-1)
-            e_types = ent[n_none_ents]
-            e_spans = batch['entity_spans'][i][n_none_ents]
-            
-            
-            prs = rels[i][r_ixs]
-            er_spans = batch['entity_spans'][i][prs].long()
-            e_types = torch.zeros([prs.shape[0],2])
-            
-            if (prs.shape[0] != 0):
-                e_types = torch.stack([ent_types[prs[p]] for p in range(prs.shape[0])])
-            
-            sample_r = self.convert_relations(r_types, er_spans, e_types, r_score)
-            self.rel.append(sample_r)
-            e_scores = torch.gather(ents[i][n_none_ents],1,e_types.unsqueeze(1)).view(-1)
-            
-            
-            
-    def convert_relations(self, types, e_spans, e_types, scores):
-        verify = set()
-        res = list()
-        for i in range(types.shape[0]):
-            label = types[i].item()
-            rel_type = self.reader.fetch_r_type(label)
-            start_ix = types[i][0].item()
-            end_ix = types[i][1].item()
-            start_e = self.reader.fetch_e_type(start_ix)
-            end_e = self.reader.fetch_e_type(end_ix)
-            score = scores[i].item()
-            spans = e_spans[i]
-            start_h, start_t = spans[0].tolist()
-            end_h, end_t = spans[1].tolist()
-            
-            rel = ((start_h, start_t, start_e), (end_h, end_t, end_e), rel_type)
-            if rel not in verify:
-                verify.add(rel)
-                res.append(tuple(list(rel) + [score]))
-        return res
+    
     
 class ERLoss:
     def __init__(self, network, optimizer, schedule,
