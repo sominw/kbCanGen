@@ -95,10 +95,15 @@ class ModelEval:
         for i in range(batch_size):
             ent = ents[i]
             rel = rels[i]
-            n_none_rels rel.nonzero().view(-1)
+            n_none_rels = rel.nonzero().view(-1)
             r_score = rel[n_none_rels]
             r_types = (n_none_rels % rel_types) + 1
             r_ixs = n_none_rels // rel_types
+            
+            n_none_ents = ent.nonzero().view(-1)
+            e_types = ent[n_none_ents]
+            e_spans = batch['entity_spans'][i][n_none_ents]
+            
             
             prs = rels[i][r_ixs]
             er_spans = batch['entity_spans'][i][prs].long()
@@ -107,6 +112,32 @@ class ModelEval:
             if (prs.shape[0] != 0):
                 e_types = torch.stack([ent_types[prs[p]] for p in range(prs.shape[0])])
             
+            sample_r = self.convert_relations(r_types, er_spans, e_types, r_score)
+            self.rel.append(sample_r)
+            e_scores = torch.gather(ents[i][n_none_ents],1,e_types.unsqueeze(1)).view(-1)
+            
+            
+            
+    def convert_relations(self, types, e_spans, e_types, scores):
+        verify = set()
+        res = list()
+        for i in range(types.shape[0]):
+            label = types[i].item()
+            rel_type = self.reader.fetch_r_type(label)
+            start_ix = types[i][0].item()
+            end_ix = types[i][1].item()
+            start_e = self.reader.fetch_e_type(start_ix)
+            end_e = self.reader.fetch_e_type(end_ix)
+            score = scores[i].item()
+            spans = e_spans[i]
+            start_h, start_t = spans[0].tolist()
+            end_h, end_t = spans[1].tolist()
+            
+            rel = ((start_h, start_t, start_e), (end_h, end_t, end_e), rel_type)
+            if rel not in verify:
+                verify.add(rel)
+                res.append(tuple(list(rel) + [score]))
+        return res
     
 class ERLoss:
     def __init__(self, network, optimizer, schedule,
